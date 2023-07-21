@@ -1,8 +1,8 @@
 package com.azure.communication.cli;
 
-import com.azure.communication.configuration.ConfigurationProcessor;
+import com.azure.communication.configuration.ConfigurationManager;
 import com.azure.communication.io.SourceManager;
-import com.github.javaparser.StaticJavaParser;
+import com.azure.communication.processors.ProcessorRunner;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
@@ -35,11 +35,11 @@ public class Main {
             Namespace ns = parser.parseArgs(args);
             List<String> paths = ns.getList("source_dirs");
             String configPath = ns.getString("configuration");
-            ConfigurationProcessor configurationProcessor = new ConfigurationProcessor(Paths.get(configPath));
+            ConfigurationManager configurationManager = new ConfigurationManager(Paths.get(configPath));
 
             Set<Path> javaSources = SourceManager.getDirectorySourceFiles(paths.get(0));
-
-            System.out.println(javaSources);
+            ProcessorRunner runner = new ProcessorRunner(javaSources, configurationManager);
+            runner.run();
         } catch (ArgumentParserException e) {
             parser.handleError(e);
             System.exit(1);

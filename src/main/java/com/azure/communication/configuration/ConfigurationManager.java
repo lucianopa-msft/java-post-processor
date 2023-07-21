@@ -11,11 +11,11 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.*;
 
-public class ConfigurationProcessor {
+public class ConfigurationManager {
 
     private final List<IConfiguration> mConfigurations = new ArrayList<>();
 
-    public ConfigurationProcessor(Path configurationFile) throws IOException, IllegalArgumentException {
+    public ConfigurationManager(Path configurationFile) throws IOException, IllegalArgumentException {
         if (configurationFile == null) {
             throw new IllegalArgumentException("We must provide a non-null configuration file.");
         }
