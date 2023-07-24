@@ -29,14 +29,16 @@ public class ProcessorRunner {
     }
 
     public void run() throws IOException {
-
         for (Path source: mJavaSources) {
             SourceRoot sourceRoot = new SourceRoot(source.getParent());
             CompilationUnit compilationUnit = sourceRoot.parse("", source.getFileName().toString());
+            boolean processed = false;
             for (ISourceProcessor processor : mProcessors) {
-                processor.process(compilationUnit);
+                processed |= processor.process(compilationUnit);
             }
-            sourceRoot.saveAll();
+            if (processed) {
+                sourceRoot.saveAll();
+            }
         }
 
     }
