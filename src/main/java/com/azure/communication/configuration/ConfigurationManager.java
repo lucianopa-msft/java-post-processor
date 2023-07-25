@@ -10,6 +10,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ConfigurationManager {
 
@@ -42,17 +43,16 @@ public class ConfigurationManager {
             return;
         }
 
-        Set<String> extensibleEnumsList = new HashSet<>();
-        for (int i = 0; i < object.size(); i++) {
-            String enumName = object.get(i).getAsString();
-            if (enumName != null) {
-                extensibleEnumsList.add(enumName);
-            }
-        }
+        Set<String> extensibleEnumsList = object.asList()
+                .stream()
+                .map(JsonElement::getAsString)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
 
         mConfigurations.add(new ExtensibleEnumsConfiguration(extensibleEnumsList));
     }
 
+    @SuppressWarnings("unchecked")
     public <T> Optional<T> findConfiguration(Class<T> classType) {
         if (IConfiguration.class.isAssignableFrom(classType)) {
             Optional<IConfiguration> result = mConfigurations

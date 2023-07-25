@@ -13,7 +13,11 @@ import com.google.common.collect.Streams;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static java.util.logging.Level.INFO;
+
 
 /**
  * Transforms a Java enum into an extensible enum following the
@@ -21,10 +25,11 @@ import java.util.stream.Collectors;
  */
 public class ExtensibleEnumProcessor implements ISourceProcessor {
     private final Set<String> mExtensibleEnums;
+    private final Logger logger = Logger.getLogger(getClass().getName());
 
     public ExtensibleEnumProcessor(Set<String> extensibleEnums) {
         this.mExtensibleEnums = extensibleEnums;
-        System.out.println(mExtensibleEnums);
+        logger.log(INFO, "Extensible Enums Configuration: " + mExtensibleEnums.toString());
     }
 
     public boolean process(CompilationUnit compilationUnit) {
@@ -37,6 +42,7 @@ public class ExtensibleEnumProcessor implements ISourceProcessor {
             return false;
 
         for (EnumDeclaration enumDeclaration : enumDeclarations) {
+            logger.log(INFO, "Processing \"" + enumDeclaration.getNameAsString() + "\" enum declaration.");
             compilationUnit.remove(enumDeclaration);
             addExtensibleEnumDeclaration(compilationUnit, enumDeclaration);
         }
