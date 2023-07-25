@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Transforms a Java enum into a extensible enum following the
+ * Transforms a Java enum into an extensible enum following the
  * <a href="https://azure.github.io/azure-sdk/java_introduction.html#enumerations">Azure Review Board guidelines</a>.
  */
 public class ExtensibleEnumProcessor implements ISourceProcessor {
