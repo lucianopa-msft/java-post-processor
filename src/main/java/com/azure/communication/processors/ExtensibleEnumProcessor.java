@@ -1,7 +1,5 @@
 package com.azure.communication.processors;
 
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
@@ -17,6 +15,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Transforms a Java enum into a extensible enum following the
+ * <a href="https://azure.github.io/azure-sdk/java_introduction.html#enumerations">Azure Review Board guidelines</a>.
+ */
 public class ExtensibleEnumProcessor implements ISourceProcessor {
     private final Set<String> mExtensibleEnums;
 
@@ -47,11 +49,12 @@ public class ExtensibleEnumProcessor implements ISourceProcessor {
     ) {
         compilationUnit.addImport("com.azure.core.util.ExpandableStringEnum");
         String className = enumDeclaration.getNameAsString();
-        ClassOrInterfaceDeclaration extensibleEnumClass = compilationUnit.addClass(
-                className,
-                Modifier.Keyword.PUBLIC,
-                Modifier.Keyword.FINAL);
-        extensibleEnumClass.addExtendedType("ExpandableStringEnum<" + className + ">");
+        ClassOrInterfaceDeclaration extensibleEnumClass = compilationUnit
+                .addClass(
+                    className,
+                    Modifier.Keyword.PUBLIC,
+                    Modifier.Keyword.FINAL)
+                .addExtendedType("ExpandableStringEnum<" + className + ">");
         Optional<JavadocComment> classDoc = enumDeclaration.getJavadocComment();
         classDoc.ifPresent(extensibleEnumClass::setJavadocComment);
 
@@ -71,20 +74,7 @@ public class ExtensibleEnumProcessor implements ISourceProcessor {
                     .ifPresent(fieldDeclaration::setJavadocComment);
         }
 
-        String fromStringMethodBody =
-                "/**\n" +
-                "* Creates or finds a {@link "+ className + "} from its string representation.\n" +
-                "* @param name a name to look for\n" +
-                "* @return the corresponding {@link "+ className + "}\n" +
-                "*/\n" +
-                "public static " + className + " fromString(String name) {\n" +
-                "    int ordinal = " + className + ".findOrdinalByName(name);" +
-                "    return fromString(name, " + className + ".class).setMOrdinal(ordinal);\n" +
-                "}";
-        ParseResult<BodyDeclaration<?>> bodyDeclaration = new JavaParser()
-                .parseBodyDeclaration(fromStringMethodBody);
-        bodyDeclaration.getResult()
-                .ifPresent(result -> extensibleEnumClass.addMember(result.asMethodDeclaration()));
+        this.addFromStringMethodDeclaration(extensibleEnumClass, enumDeclaration);
 
         // Private ordinal members
         String ordinalMember = "mOrdinal";
@@ -109,9 +99,60 @@ public class ExtensibleEnumProcessor implements ISourceProcessor {
                 .setType(PrimitiveType.intType())
                 .setBody(stmt);
 
-        addFindOrdinalMethod(extensibleEnumClass, enumDeclaration);
+        this.addFindOrdinalMethod(extensibleEnumClass, enumDeclaration);
     }
 
+    // public static EnumName fromString(String name) declaration and body.
+    private void addFromStringMethodDeclaration(
+            ClassOrInterfaceDeclaration extensibleEnumClass,
+            EnumDeclaration enumDeclaration
+    ) {
+        String className = enumDeclaration.getNameAsString();
+        String javadocComment =
+                "* Creates or finds a {@link "+ className + "} from its string representation.\n" +
+                "* @param name a name to look for.\n" +
+                "* @return the corresponding {@link "+ className + "}\n";
+
+        // int ordinal = EnumName.findOrdinalByName(name);
+        MethodCallExpr callToFindOrdinal = new MethodCallExpr()
+                .setScope(new NameExpr(className))
+                .setName("findOrdinalByName")
+                .addArgument(new NameExpr("name"));
+        VariableDeclarator ordinalDeclarator = new VariableDeclarator()
+                .setName("ordinal")
+                .setType(PrimitiveType.intType())
+                .setInitializer(callToFindOrdinal);
+        VariableDeclarationExpr ordinalValueDeclaration = new VariableDeclarationExpr()
+                .setVariables(NodeList.nodeList(ordinalDeclarator));
+
+        // return fromString(name, EnumName.class).setMOrdinal(ordinal);
+        MethodCallExpr callToFromString = new MethodCallExpr()
+                .setName("fromString")
+                .addArgument(new NameExpr("name"))
+                .addArgument(new ClassExpr().setType(className));
+        MethodCallExpr callToSetOrdinal = new MethodCallExpr()
+                .setScope(callToFromString)
+                .setName("setMOrdinal")
+                .addArgument("ordinal");
+        ReturnStmt returnStmt = new ReturnStmt()
+                .setExpression(callToSetOrdinal);
+
+        BlockStmt fnBody = new BlockStmt()
+                .addStatement(ordinalValueDeclaration)
+                .addStatement(returnStmt);
+
+        extensibleEnumClass
+                .addMethod(
+                        "fromString",
+                        Modifier.Keyword.PUBLIC,
+                        Modifier.Keyword.STATIC)
+                .setType(className)
+                .addParameter(String.class, "name")
+                .setBody(fnBody)
+                .setJavadocComment(javadocComment);
+    }
+
+    // private static int findOrdinalByName(String name) declaration and body.
     private void addFindOrdinalMethod(
             ClassOrInterfaceDeclaration extensibleEnumClass,
             EnumDeclaration enumDeclaration
@@ -145,7 +186,7 @@ public class ExtensibleEnumProcessor implements ISourceProcessor {
                         Modifier.Keyword.PRIVATE,
                         Modifier.Keyword.STATIC)
                 .setType(PrimitiveType.intType())
-                .addParameter("String", "name")
+                .addParameter(String.class, "name")
                 .setBody(new BlockStmt().addStatement(switchStmt));
     }
 }
