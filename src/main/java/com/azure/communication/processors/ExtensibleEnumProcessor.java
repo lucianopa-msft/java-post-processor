@@ -135,7 +135,7 @@ public class ExtensibleEnumProcessor implements ISourceProcessor {
                 .setStatements(NodeList.nodeList(throwStmt));
         switchEntries.add(defaultEntry);
 
-        SwitchExpr switchExpr = new SwitchExpr()
+        SwitchStmt switchStmt = new SwitchStmt()
                 .setSelector(new NameExpr(nameParam))
                 .setEntries(NodeList.nodeList(switchEntries));
 
@@ -146,6 +146,6 @@ public class ExtensibleEnumProcessor implements ISourceProcessor {
                         Modifier.Keyword.STATIC)
                 .setType(PrimitiveType.intType())
                 .addParameter("String", "name")
-                .setBody(new BlockStmt().addStatement(switchExpr));
+                .setBody(new BlockStmt().addStatement(switchStmt));
     }
 }
