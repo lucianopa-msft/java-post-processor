@@ -53,7 +53,7 @@ public class ExtensibleEnumProcessor implements ISourceProcessor {
             CompilationUnit compilationUnit,
             EnumDeclaration enumDeclaration
     ) {
-        compilationUnit.addImport("com.azure.core.util.ExpandableStringEnum");
+        compilationUnit.addImport("com.azure.android.core.util.ExpandableStringEnum");
         String className = enumDeclaration.getNameAsString();
         ClassOrInterfaceDeclaration extensibleEnumClass = compilationUnit
                 .addClass(
