@@ -23,4 +23,9 @@ public class ExtensibleEnumsConfiguration implements IConfiguration<Set<String>>
     public String getName() {
         return CONFIGURATION_NAME;
     }
+
+    @Override
+    public String toString() {
+        return this.getName();
+    }
 }

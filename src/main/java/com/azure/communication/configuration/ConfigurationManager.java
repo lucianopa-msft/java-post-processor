@@ -10,9 +10,13 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static java.util.logging.Level.INFO;
+
 public class ConfigurationManager {
+    private final Logger logger = Logger.getLogger(getClass().getName());
 
     private final List<IConfiguration> mConfigurations = new ArrayList<>();
 
@@ -31,6 +35,8 @@ public class ConfigurationManager {
         JsonElement root = new Gson().fromJson(fr, JsonElement.class);
 
         addExtensibleEnumsConfiguration(root);
+
+        logger.log(INFO, "Parsed configurations: " + mConfigurations);
     }
 
     private void addExtensibleEnumsConfiguration(JsonElement root) {
